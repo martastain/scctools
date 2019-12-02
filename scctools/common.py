@@ -1,5 +1,8 @@
+import re
 from nxtools import *
+
 from .eia608codes import EIA608CODES
+from .eia608chars import EIA608CHARS
 
 def eia608code(code, channel=1):
     return EIA608CODES[code][channel-1]
@@ -30,11 +33,12 @@ def str2eia608(s, channel=1):
                 buff = ""
             response.append("94f0")
             continue
-        buff += "{:x}".format(
+        ch = "{:x}".format(
                 odd_parity(
                     ord(b)
                 )
             )
+        buff += ch
         if len(buff) == 4:
             response.append(buff)
             buff = ""
@@ -44,8 +48,16 @@ def str2eia608(s, channel=1):
     return response
 
 
+def validate_string(string):
+    string = string.replace("’", "'")
+    return re.sub("[^{}]".format(
+                re.escape(EIA608CHARS)
+            ), "", string)
+
+
 
 def str2scc(s):
+    logging.warning("Call to deprecated function str2scc")
     response = ""
     length_counter = 0
     for b in s:
@@ -72,3 +84,43 @@ def str2scc(s):
 
 
 
+class Caption():
+    def __init__(self, text, **kwargs):
+        self.text = text
+        self.start = kwargs.get("start", 0)
+        self.stop = kwargs.get("stop", 0)
+        self.channel = kwargs.get("channel", 1)
+
+    @property
+    def lines(self):
+        return [line.strip() for line in self.text.split("\n")]
+
+    def eia608cmds(self, mode="rollup"):
+        result = [
+                eia608code("EDM"),
+                eia608code("EDM"),
+                eia608code("ENM"),
+                eia608code("ENM"),
+                eia608code("RCL"),
+                eia608code("RCL"),
+            ]
+        lines = self.lines
+        num_lines = len(lines)
+        if num_lines == 1:
+            result.extend([eia608code("RU2")]*2)
+        elif num_lines == 2:
+            result.extend([eia608code("RU2")]*2)
+        elif num_lines == 3:
+            result.extend([eia608code("RU3")]*2)
+        else:
+            result.extend([eia608code("RU4")]*2)
+
+        for i, line in enumerate(lines):
+            line = line.strip()
+            result.extend(str2eia608(line, self.channel))
+            if i < len(lines) -1:
+                result.append(eia608code("CR", self.channel))
+
+        result.append(eia608code("EOC", self.channel))
+        result.append(eia608code("EOC", self.channel))
+        return result
