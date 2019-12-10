@@ -1,8 +1,35 @@
 import re
+import textwrap
+import unidecode
+
 from nxtools import *
 
 from .eia608codes import EIA608CODES
 from .eia608chars import EIA608CHARS
+
+
+
+def caption_reformat(text, width=32):
+    lines = []
+    buff = ""
+    for line in text.split("\n"):
+        line = line.strip()
+        line = unidecode.unidecode(line)
+        if line.startswith("-"):
+            lines.append(buff)
+            buff = ""
+        buff += " " + line
+    if buff:
+        lines.append(buff)
+    output = []
+    for line in lines:
+        line = line.strip()
+        line = textwrap.wrap(line.strip(), width)
+        if not line:
+            continue
+        output.extend([l for l in line if l])
+    return output
+
 
 def eia608code(code, channel=1):
     return EIA608CODES[code][channel-1]
@@ -104,7 +131,9 @@ class Caption():
                 eia608code("RCL"),
                 eia608code("RCL"),
             ]
-        lines = self.lines
+
+        lines = caption_reformat(self.text)
+
         num_lines = len(lines)
         if num_lines == 1:
             result.extend([eia608code("RU2")]*2)

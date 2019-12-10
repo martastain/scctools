@@ -1,4 +1,4 @@
-__all__ = ["cc608toscc", "sccconsolide", "SRTParser"]
+__all__ = ["cc608toscc", "sccconsolide", "SRTParser", "eia608code"]
 
 from .common import *
 from .eia608file import cc608toscc

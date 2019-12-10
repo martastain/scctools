@@ -18,7 +18,7 @@ def strip_tags(html):
     return s.get_data()
 
 def get_srt_lines(path):
-    data = open(path, "r", errors="ignore")
+    data = open(str(path), "r", errors="ignore", newline=None)
     buff = ""
     for ch in data.read():
         if ch == "\n":
@@ -56,7 +56,4 @@ class SRTParser():
 
             if start and stop and line.strip():
                 line = line.strip()
-                line_valid = validate_string(line)
-                #if line != line_valid:
-                #    logging.warning("Corrected invalid character at timecode {}".format(s2tc(start)))
-                text.append(line_valid)
+                text.append(line)
