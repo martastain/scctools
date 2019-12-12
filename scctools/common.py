@@ -34,6 +34,7 @@ def caption_reformat(text, width=32):
 def eia608code(code, channel=1):
     return EIA608CODES[code][channel-1]
 
+
 def odd_parity(b):
     result = b
     bit_count = 0
@@ -80,7 +81,6 @@ def validate_string(string):
     return re.sub("[^{}]".format(
                 re.escape(EIA608CHARS)
             ), "", string)
-
 
 
 def str2scc(s):
@@ -132,7 +132,7 @@ class Caption():
                 eia608code("RCL"),
             ]
 
-        lines = caption_reformat(self.text)
+        lines = [validate_string(f) for f in caption_reformat(self.text)]
 
         num_lines = len(lines)
         if num_lines == 1:
